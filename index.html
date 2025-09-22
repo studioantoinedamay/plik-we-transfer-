@@ -2,120 +2,199 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Upload avec validation et fetch</title>
+<title>Upload type Plik Pro</title>
 <style>
-  body { font-family: Arial, sans-serif; padding: 20px; }
-  .error { color: red; }
-  .success { color: green; }
-  .preview { margin-top: 10px; }
+body {
+  font-family: Arial, sans-serif;
+  background: #f0f2f5;
+  margin: 0;
+  padding: 20px;
+}
+h2 { text-align: center; margin-bottom: 20px; }
+.upload-area {
+  border: 2px dashed #bbb;
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+.upload-area.dragover { border-color: #007bff; }
+#fileInput { display: none; }
+.file-list { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 15px; }
+.file-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 10px;
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+.file-card img {
+  max-width: 100px; max-height: 100px; margin-bottom: 10px; object-fit: contain;
+}
+.file-name { font-weight: bold; text-align: center; margin-bottom: 5px; word-break: break-word; }
+.file-date { margin-bottom: 5px; width: 100%; }
+.file-actions { display: flex; gap: 5px; margin-top: 5px; }
+.file-actions button {
+  flex: 1; padding: 5px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;
+  color: #fff;
+}
+.file-actions button.upload { background: #28a745; }
+.file-actions button.delete { background: #dc3545; }
+.file-actions button.cancel { background: #ffc107; color: #000; }
+.progress-bar { width: 100%; background: #eee; height: 8px; border-radius: 4px; margin-bottom: 5px; overflow: hidden; }
+.progress { height: 100%; width: 0%; background: #007bff; transition: width 0.2s; }
+.notifications { margin-top: 20px; text-align: center; }
+.notifications .success { color: #28a745; }
+.notifications .error { color: #dc3545; }
+.link-box { margin-top: 5px; font-size: 12px; word-break: break-word; text-align: center; }
 </style>
 </head>
 <body>
 
-<h2>Formulaire d'upload</h2>
+<h2>Upload type Plik Pro</h2>
 
-<form id="uploadForm">
-  <label for="fileInput">Choisir un fichier :</label>
-  <input type="file" id="fileInput" required><br><br>
+<div class="upload-area" id="uploadArea">
+  Glissez-déposez vos fichiers ici ou <button onclick="document.getElementById('fileInput').click()">choisir des fichiers</button>
+  <input type="file" id="fileInput" multiple>
+</div>
 
-  <label for="dateInput">Choisir une date :</label>
-  <input type="date" id="dateInput" required><br><br>
-
-  <button type="submit" id="submitBtn" disabled>Envoyer</button>
-</form>
-
-<div id="errorMsg" class="error"></div>
-<div id="successMsg" class="success"></div>
-<div id="preview" class="preview"></div>
+<div class="file-list" id="fileList"></div>
+<div class="notifications" id="notifications"></div>
 
 <script>
+const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
-const dateInput = document.getElementById('dateInput');
-const submitBtn = document.getElementById('submitBtn');
-const errorMsg = document.getElementById('errorMsg');
-const successMsg = document.getElementById('successMsg');
-const preview = document.getElementById('preview');
+const fileList = document.getElementById('fileList');
+const notifications = document.getElementById('notifications');
 
-function validateForm() {
-  errorMsg.textContent = '';
-  successMsg.textContent = '';
-  let valid = true;
+let filesData = [];
 
-  // Validation fichier
-  const file = fileInput.files[0];
-  if (!file) {
-    valid = false;
-  } else if (!['image/png','image/jpeg','application/pdf'].includes(file.type)) {
-    errorMsg.textContent = 'Format de fichier invalide (PNG, JPEG ou PDF uniquement).';
-    valid = false;
-  } else if (file.size > 5 * 1024 * 1024) {
-    errorMsg.textContent = 'Fichier trop lourd (max 5MB).';
-    valid = false;
-  }
+function createFileCard(file) {
+  const card = document.createElement('div');
+  card.className = 'file-card';
 
-  // Validation date
-  const selectedDate = new Date(dateInput.value);
-  const today = new Date();
-  if (isNaN(selectedDate)) {
-    valid = false;
-  } else if (selectedDate > today) {
-    errorMsg.textContent = 'La date ne peut pas être dans le futur.';
-    valid = false;
-  }
-
-  submitBtn.disabled = !valid;
-
-  // Prévisualisation si image
-  if (file && file.type.startsWith('image/')) {
+  let preview = document.createElement('img');
+  if(file.type.startsWith('image/')) {
     const reader = new FileReader();
-    reader.onload = e => {
-      preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width:200px;">`;
-    };
+    reader.onload = e => preview.src = e.target.result;
     reader.readAsDataURL(file);
   } else {
-    preview.innerHTML = '';
+    preview.src = 'https://cdn-icons-png.flaticon.com/512/109/109612.png';
+  }
+  card.appendChild(preview);
+
+  const name = document.createElement('div');
+  name.className = 'file-name';
+  name.textContent = file.name;
+  card.appendChild(name);
+
+  const dateInput = document.createElement('input');
+  dateInput.type = 'date';
+  dateInput.className = 'file-date';
+  dateInput.valueAsDate = new Date();
+  card.appendChild(dateInput);
+
+  const progressBar = document.createElement('div');
+  progressBar.className = 'progress-bar';
+  const progress = document.createElement('div');
+  progress.className = 'progress';
+  progressBar.appendChild(progress);
+  card.appendChild(progressBar);
+
+  const actions = document.createElement('div');
+  actions.className = 'file-actions';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'cancel';
+  cancelBtn.textContent = 'Annuler';
+  cancelBtn.onclick = () => cancelUpload(fileData);
+  actions.appendChild(cancelBtn);
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'delete';
+  deleteBtn.textContent = 'Supprimer';
+  deleteBtn.onclick = () => {
+    fileList.removeChild(card);
+    filesData = filesData.filter(f => f !== fileData);
+  };
+  actions.appendChild(deleteBtn);
+
+  card.appendChild(actions);
+
+  const linkBox = document.createElement('div');
+  linkBox.className = 'link-box';
+  card.appendChild(linkBox);
+
+  const fileData = { file, card, progress, dateInput, linkBox, xhr: null };
+  filesData.push(fileData);
+
+  autoUpload(fileData);
+
+  return card;
+}
+
+function autoUpload(fileData) {
+  const { file, progress, dateInput, linkBox } = fileData;
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('date', dateInput.value);
+
+  // Simulation upload avec annulation
+  let uploaded = 0;
+  const interval = setInterval(() => {
+    if(fileData.cancelled) {
+      clearInterval(interval);
+      progress.style.width = '0%';
+      notifications.innerHTML = `<div class="error">"${file.name}" upload annulé</div>`;
+      return;
+    }
+    uploaded += Math.random() * 10;
+    if(uploaded >= 100) {
+      uploaded = 100;
+      clearInterval(interval);
+      notifications.innerHTML = `<div class="success">"${file.name}" upload terminé !</div>`;
+      linkBox.textContent = `Lien simulé: https://plik.mock/${file.name}`;
+    }
+    progress.style.width = uploaded + '%';
+  }, 100);
+
+  fileData.cancel = () => { fileData.cancelled = true; clearInterval(interval); };
+}
+
+function cancelUpload(fileData) {
+  if(fileData.cancel) fileData.cancel();
+}
+
+function handleFiles(files) {
+  for(const file of files) {
+    const card = createFileCard(file);
+    fileList.appendChild(card);
   }
 }
 
-fileInput.addEventListener('change', validateForm);
-dateInput.addEventListener('change', validateForm);
-
-document.getElementById('uploadForm').addEventListener('submit', async e => {
+uploadArea.addEventListener('dragover', e => {
   e.preventDefault();
-  errorMsg.textContent = '';
-  successMsg.textContent = '';
-
-  const file = fileInput.files[0];
-  const date = dateInput.value;
-
-  if (!file || !date) return;
-
-  // Préparation FormData pour l'envoi
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('date', date);
-
-  try {
-    const response = await fetch('/upload', {  // Remplace '/upload' par ton endpoint
-      method: 'POST',
-      body: formData
-    });
-
-    if (response.ok) {
-      successMsg.textContent = 'Fichier et date envoyés avec succès !';
-      // Réinitialiser le formulaire si nécessaire
-      fileInput.value = '';
-      dateInput.value = '';
-      preview.innerHTML = '';
-      submitBtn.disabled = true;
-    } else {
-      const errorText = await response.text();
-      errorMsg.textContent = `Erreur serveur : ${errorText}`;
-    }
-  } catch (err) {
-    errorMsg.textContent = `Erreur réseau : ${err.message}`;
-  }
+  uploadArea.classList.add('dragover');
 });
+
+uploadArea.addEventListener('dragleave', e => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+
+fileInput.addEventListener('change', e => handleFiles(fileInput.files));
 </script>
 
 </body>
