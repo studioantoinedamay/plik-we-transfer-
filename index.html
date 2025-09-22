@@ -2,98 +2,120 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Envoyer vos fichiers</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upload avec validation et fetch</title>
 <style>
-body { font-family: Arial, sans-serif; background: #f5f5f5; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
-.container { background:#fff; padding:40px; border-radius:15px; text-align:center; max-width:500px; width:90%; box-shadow:0 10px 25px rgba(0,0,0,0.1);}
-img { max-width:120px; margin-bottom:20px;}
-h1 { font-size:24px; margin-bottom:10px;}
-p { margin-bottom:20px; color:#555;}
-#dropArea { padding:30px; border:2px dashed #ff5a5f; border-radius:15px; cursor:pointer; transition:0.3s;}
-#dropArea.hover { background:#ffeaea;}
-button { padding:15px 30px; font-size:18px; background:#ff5a5f; color:white; border:none; border-radius:50px; cursor:pointer; margin-top:20px; transition:0.3s;}
-button:hover { background:#e04848;}
-.progress-container { margin-top:10px; text-align:left;}
-.progress-bar { width:0%; height:15px; background:#ff5a5f; border-radius:10px; margin-bottom:10px; transition:0.2s;}
-#status { margin-top:20px; text-align:left; }
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  .error { color: red; }
+  .success { color: green; }
+  .preview { margin-top: 10px; }
 </style>
 </head>
 <body>
 
-<div class="container">
-<img src="public/logo.png" alt="Logo">
-<h1>Envoyez vos fichiers</h1>
-<p>Glissez-déposez vos fichiers ou cliquez pour sélectionner</p>
-<div id="dropArea">Déposez vos fichiers ici</div>
-<input type="file" id="fileInput" multiple style="display:none;">
-<button onclick="uploadFiles()">Uploader</button>
-<div id="status"></div>
-</div>
+<h2>Formulaire d'upload</h2>
+
+<form id="uploadForm">
+  <label for="fileInput">Choisir un fichier :</label>
+  <input type="file" id="fileInput" required><br><br>
+
+  <label for="dateInput">Choisir une date :</label>
+  <input type="date" id="dateInput" required><br><br>
+
+  <button type="submit" id="submitBtn" disabled>Envoyer</button>
+</form>
+
+<div id="errorMsg" class="error"></div>
+<div id="successMsg" class="success"></div>
+<div id="preview" class="preview"></div>
 
 <script>
-const dropArea = document.getElementById('dropArea');
 const fileInput = document.getElementById('fileInput');
-let filesToUpload = [];
+const dateInput = document.getElementById('dateInput');
+const submitBtn = document.getElementById('submitBtn');
+const errorMsg = document.getElementById('errorMsg');
+const successMsg = document.getElementById('successMsg');
+const preview = document.getElementById('preview');
 
-dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('hover'); });
-dropArea.addEventListener('dragleave', e => { e.preventDefault(); dropArea.classList.remove('hover'); });
-dropArea.addEventListener('drop', e => {
-  e.preventDefault(); dropArea.classList.remove('hover');
-  filesToUpload = Array.from(e.dataTransfer.files);
-  dropArea.textContent = filesToUpload.map(f => f.name).join(', ');
-});
+function validateForm() {
+  errorMsg.textContent = '';
+  successMsg.textContent = '';
+  let valid = true;
 
-dropArea.addEventListener('click', () => fileInput.click());
-fileInput.addEventListener('change', () => {
-  filesToUpload = Array.from(fileInput.files);
-  dropArea.textContent = filesToUpload.map(f => f.name).join(', ');
-});
+  // Validation fichier
+  const file = fileInput.files[0];
+  if (!file) {
+    valid = false;
+  } else if (!['image/png','image/jpeg','application/pdf'].includes(file.type)) {
+    errorMsg.textContent = 'Format de fichier invalide (PNG, JPEG ou PDF uniquement).';
+    valid = false;
+  } else if (file.size > 5 * 1024 * 1024) {
+    errorMsg.textContent = 'Fichier trop lourd (max 5MB).';
+    valid = false;
+  }
 
-async function uploadFiles() {
-  if(filesToUpload.length === 0) { alert('Aucun fichier sélectionné'); return; }
+  // Validation date
+  const selectedDate = new Date(dateInput.value);
+  const today = new Date();
+  if (isNaN(selectedDate)) {
+    valid = false;
+  } else if (selectedDate > today) {
+    errorMsg.textContent = 'La date ne peut pas être dans le futur.';
+    valid = false;
+  }
 
-  const status = document.getElementById('status');
-  status.innerHTML = '';
+  submitBtn.disabled = !valid;
 
-  for(const file of filesToUpload) {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    // Créer barre de progression
-    const container = document.createElement('div');
-    container.classList.add('progress-container');
-    container.innerHTML = `<p>${file.name}</p><div class="progress-bar"></div>`;
-    status.appendChild(container);
-    const progressBar = container.querySelector('.progress-bar');
-
-    try {
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', 'https://transfert.antoinedamay.fr/api/files');
-      xhr.upload.onprogress = e => {
-        if(e.lengthComputable) {
-          const percent = (e.loaded / e.total) * 100;
-          progressBar.style.width = percent + '%';
-        }
-      };
-      xhr.onload = () => {
-        if(xhr.status === 200) {
-          const data = JSON.parse(xhr.responseText);
-          const link = document.createElement('a');
-          link.href = `https://transfert.antoinedamay.fr/file/${data.id}`;
-          link.textContent = 'Lien de téléchargement';
-          link.target = '_blank';
-          container.appendChild(link);
-        } else {
-          container.innerHTML += '<p>Erreur lors de l\'upload</p>';
-        }
-      };
-      xhr.send(formData);
-    } catch(err) {
-      container.innerHTML += '<p>Erreur lors de l\'upload</p>';
-    }
+  // Prévisualisation si image
+  if (file && file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width:200px;">`;
+    };
+    reader.readAsDataURL(file);
+  } else {
+    preview.innerHTML = '';
   }
 }
+
+fileInput.addEventListener('change', validateForm);
+dateInput.addEventListener('change', validateForm);
+
+document.getElementById('uploadForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  errorMsg.textContent = '';
+  successMsg.textContent = '';
+
+  const file = fileInput.files[0];
+  const date = dateInput.value;
+
+  if (!file || !date) return;
+
+  // Préparation FormData pour l'envoi
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('date', date);
+
+  try {
+    const response = await fetch('/upload', {  // Remplace '/upload' par ton endpoint
+      method: 'POST',
+      body: formData
+    });
+
+    if (response.ok) {
+      successMsg.textContent = 'Fichier et date envoyés avec succès !';
+      // Réinitialiser le formulaire si nécessaire
+      fileInput.value = '';
+      dateInput.value = '';
+      preview.innerHTML = '';
+      submitBtn.disabled = true;
+    } else {
+      const errorText = await response.text();
+      errorMsg.textContent = `Erreur serveur : ${errorText}`;
+    }
+  } catch (err) {
+    errorMsg.textContent = `Erreur réseau : ${err.message}`;
+  }
+});
 </script>
 
 </body>
