@@ -1,216 +1,461 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Plik Style Upload Pro</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Plik UI — Upload Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f0f2f5;
-  margin: 0;
-  padding: 20px;
-}
-h2 { text-align: center; margin-bottom: 20px; color: #333; }
+  :root{
+    --bg:#f5f7fb;
+    --card:#ffffff;
+    --muted:#6b7280;
+    --primary:#2563eb;
+    --success:#16a34a;
+    --danger:#ef4444;
+    --glass: rgba(255,255,255,0.7);
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    margin:0; background:linear-gradient(180deg,var(--bg),#eef2ff);
+    color:#111827; padding:28px;
+  }
+  .container{max-width:1150px;margin:0 auto}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  header h1{font-size:20px;margin:0}
+  header p{margin:0;color:var(--muted);font-size:13px}
+  .topbar{display:flex;gap:12px;align-items:center}
+  .config {font-size:13px; color:var(--muted);}
+  .card{
+    background:var(--card); border-radius:var(--radius); padding:18px; box-shadow:0 8px 30px rgba(23,23,60,0.06);
+    margin-bottom:18px;
+  }
 
-.upload-area {
-  border: 2px dashed #bbb;
-  border-radius: 12px;
-  padding: 40px;
-  text-align: center;
-  background: #fff;
-  cursor: pointer;
-  transition: border-color 0.3s, background 0.3s;
-}
-.upload-area.dragover { border-color: #007bff; background: #e7f0ff; }
-#fileInput { display: none; }
+  /* upload area */
+  .upload-area{
+    border: 2px dashed rgba(37,99,235,0.14);
+    border-radius:12px; padding:36px; text-align:center;
+    transition:all .18s ease; cursor:pointer; background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(250,252,255,0.6));
+  }
+  .upload-area.drag{transform:translateY(-4px); box-shadow:0 14px 40px rgba(37,99,235,0.06); border-color:var(--primary)}
+  .upload-cta{display:inline-flex;gap:10px;align-items:center;background:var(--primary);color:#fff;padding:10px 14px;border-radius:10px;border:none;font-weight:600}
+  .small{font-size:13px;color:var(--muted);margin-top:8px}
 
-.file-list { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
-.file-card {
-  background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  padding: 15px;
-  width: 250px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-}
-.file-card img {
-  max-width: 120px; max-height: 120px; margin-bottom: 10px; object-fit: contain;
-  border-radius: 8px;
-}
-.file-name { font-weight: bold; text-align: center; margin-bottom: 5px; word-break: break-word; }
-.file-options { display: flex; flex-direction: column; gap: 5px; width: 100%; margin-bottom: 5px; }
-.file-options label { font-size: 12px; display: flex; align-items: center; justify-content: space-between; }
-.file-options input[type="text"], .file-options input[type="date"], .file-options input[type="password"], .file-options textarea {
-  width: 60%; padding: 4px; border-radius: 6px; border: 1px solid #ccc; font-size: 12px;
-}
-textarea { resize: vertical; height: 50px; }
+  /* file grid */
+  .file-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:18px}
+  .file-card{
+    background:linear-gradient(180deg,#fff,#fbfdff);
+    border-radius:12px;padding:12px; display:flex;flex-direction:column;gap:10px;position:relative;
+    border:1px solid rgba(15,23,42,0.03);
+  }
+  .thumb{
+    width:100%;height:140px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#f3f6fb;overflow:hidden;
+  }
+  .thumb img{max-width:100%;max-height:100%;object-fit:contain}
+  .meta{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .filename{font-weight:600;font-size:14px;color:#0f172a;flex:1}
+  .size{font-size:12px;color:var(--muted)}
+  .opts{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+  .row{display:flex;justify-content:space-between;gap:8px;align-items:center}
+  label.switch{font-size:13px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .switch input{margin-left:8px}
 
-.file-actions { display: flex; gap: 5px; margin-top: 5px; width: 100%; }
-.file-actions button {
-  flex: 1; padding: 6px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;
-  color: #fff;
-}
-.file-actions button.upload { background: #28a745; }
-.file-actions button.delete { background: #dc3545; }
-.file-actions button.cancel { background: #ffc107; color: #000; }
+  input[type="date"], input[type="password"], textarea {
+    padding:8px;border-radius:8px;border:1px solid #e6eef8;font-size:13px;width:100%;
+  }
+  textarea{min-height:56px; resize:vertical}
 
-.progress-bar { width: 100%; background: #eee; height: 10px; border-radius: 5px; margin-bottom: 5px; overflow: hidden; }
-.progress { height: 100%; width: 0%; background: #007bff; transition: width 0.2s; border-radius: 5px; }
+  .progress-wrap{height:10px;background:#eef2ff;border-radius:999px;overflow:hidden}
+  .progress{height:100%;width:0;background:linear-gradient(90deg,var(--primary),#06b6d4);transition:width .12s linear}
 
-.notifications { margin-top: 20px; text-align: center; font-size: 14px; }
-.notifications .success { color: #28a745; }
-.notifications .error { color: #dc3545; }
+  .actions{display:flex;gap:8px;margin-top:8px}
+  button.btn{padding:9px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
+  .btn.primary{background:var(--primary);color:#fff}
+  .btn.ghost{background:transparent;border:1px solid rgba(15,23,42,0.06);color:#0f172a}
+  .btn.danger{background:var(--danger);color:#fff}
+  .muted{font-size:12px;color:var(--muted)}
 
-.link-box { margin-top: 5px; font-size: 12px; word-break: break-word; text-align: center; background: #f0f0f0; padding: 4px 6px; border-radius: 6px; }
+  .footer-controls{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:12px}
+
+  .link {font-size:13px;background:#f8fafc;padding:8px;border-radius:8px;border:1px solid rgba(15,23,42,0.03);word-break:break-all}
+
+  /* small helpers */
+  .flex{display:flex;gap:8px;align-items:center}
+  .pill{background:#f1f5f9;padding:6px 8px;border-radius:8px;font-weight:600;font-size:12px}
+  .top-actions{display:flex;gap:8px;align-items:center}
+
+  @media (max-width:720px){
+    .topbar{flex-direction:column;align-items:flex-start;gap:6px}
+  }
 </style>
 </head>
 <body>
+  <div class="container">
+    <header class="top">
+      <div>
+        <h1>Plik — Upload Pro (UI)</h1>
+        <p class="muted">Toutes les options par fichier (Destruct, Streaming, Removable, Password, Comments Markdown, Expire). Configure l'URL du serveur en bas.</p>
+      </div>
 
-<h2>Upload type Plik Pro avec options</h2>
+      <div class="topbar">
+        <div class="pill">Auto-upload : <strong id="autoState">ON</strong></div>
+        <div class="config">Serveur : <span id="serverInfo" class="muted">configurable</span></div>
+      </div>
+    </header>
 
-<div class="upload-area" id="uploadArea">
-  Glissez-déposez vos fichiers ici ou <button onclick="document.getElementById('fileInput').click()">choisir des fichiers</button>
-  <input type="file" id="fileInput" multiple>
-</div>
+    <div class="card upload-card">
+      <div id="uploadArea" class="upload-area">
+        <div style="font-weight:700;font-size:16px;margin-bottom:8px">Glisse-dépose ou clique pour sélectionner</div>
+        <div class="small">Tu peux ajouter plusieurs fichiers. Chaque fichier a ses propres options (mot de passe, expiration, destruct…)</div>
+        <div style="margin-top:12px">
+          <button class="upload-cta" id="browseBtn">Choisir des fichiers</button>
+        </div>
+        <input id="fileInput" type="file" multiple style="display:none">
+      </div>
+    </div>
 
-<div class="file-list" id="fileList"></div>
-<div class="notifications" id="notifications"></div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <h3 style="margin:0 0 6px 0">Fichiers</h3>
+          <div class="muted">Prévisualisation et options par fichier</div>
+        </div>
+        <div class="top-actions">
+          <button class="btn ghost" id="cancelAll">Annuler tout</button>
+          <button class="btn danger" id="clearAll">Vider</button>
+          <button class="btn primary" id="sendAll">Envoyer tout</button>
+        </div>
+      </div>
+
+      <div id="fileGrid" class="file-grid" style="margin-top:14px"></div>
+    </div>
+
+    <div class="card" id="serverCard">
+      <div style="display:flex;gap:10px;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-weight:700">Configuration serveur</div>
+          <div class="muted" style="margin-top:6px">Entrez l'URL de ton serveur Plik (endpoint d'upload). Exemple : <code>https://plik.example.com/upload</code></div>
+        </div>
+        <div style="min-width:300px">
+          <input id="serverUrl" type="text" placeholder="https://plik.example.com/upload" style="width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef8">
+        </div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center;justify-content:flex-end">
+        <input id="autoUploadToggle" type="checkbox" checked> <label for="autoUploadToggle" class="muted">Auto-upload on add</label>
+      </div>
+    </div>
+
+    <div style="height:28px"></div>
+  </div>
 
 <script>
-const uploadArea = document.getElementById('uploadArea');
+/* ===========================
+   CONFIG — Mets ici ton endpoint
+   =========================== */
+const SERVER_UPLOAD_URL = ""; // <-- mets l'URL de ton serveur Plik ici ou écris-la dans le champ en bas
+// Si ton Plik nécessite des headers spéciaux (ex: Authorization), ajoute-les dans defaultHeaders
+const defaultHeaders = {}; // ex: { "Authorization": "Bearer TOKEN" }
+
+/* ===========================
+   Ne modifie pas le reste si tu veux tester rapidement
+   =========================== */
+
 const fileInput = document.getElementById('fileInput');
-const fileList = document.getElementById('fileList');
-const notifications = document.getElementById('notifications');
+const browseBtn = document.getElementById('browseBtn');
+const uploadArea = document.getElementById('uploadArea');
+const fileGrid = document.getElementById('fileGrid');
+const sendAllBtn = document.getElementById('sendAll');
+const clearAllBtn = document.getElementById('clearAll');
+const cancelAllBtn = document.getElementById('cancelAll');
+const serverUrlInput = document.getElementById('serverUrl');
+const serverInfo = document.getElementById('serverInfo');
+const autoToggle = document.getElementById('autoUploadToggle');
+const autoState = document.getElementById('autoState');
 
-let filesData = [];
+let filesData = []; // {id, file, el, xhr, controller, options, state, link}
 
-function createFileCard(file) {
-  const card = document.createElement('div');
-  card.className = 'file-card';
+/* init server url */
+if (SERVER_UPLOAD_URL) { serverUrlInput.value = SERVER_UPLOAD_URL; serverInfo.textContent = SERVER_UPLOAD_URL } 
+else serverInfo.textContent = 'Non configuré — renseigne ci-dessous';
 
-  // Preview
-  const preview = document.createElement('img');
-  if(file.type.startsWith('image/')) {
-    const reader = new FileReader();
-    reader.onload = e => preview.src = e.target.result;
-    reader.readAsDataURL(file);
-  } else {
-    preview.src = 'https://cdn-icons-png.flaticon.com/512/109/109612.png';
-  }
-  card.appendChild(preview);
+autoToggle.addEventListener('change', () => autoState.textContent = autoToggle.checked ? 'ON' : 'OFF');
 
-  const name = document.createElement('div');
-  name.className = 'file-name';
-  name.textContent = file.name;
-  card.appendChild(name);
+browseBtn.addEventListener('click', () => fileInput.click());
+uploadArea.addEventListener('click', (e) => { if (e.target === uploadArea) fileInput.click(); });
 
-  // Options
-  const options = document.createElement('div');
-  options.className = 'file-options';
-  options.innerHTML = `
-    <label>Destruct after first download <input type="checkbox" class="destruct"></label>
-    <label>Streaming <input type="checkbox" class="streaming"></label>
-    <label>Removable <input type="checkbox" class="removable"></label>
-    <label>Password <input type="password" class="password" placeholder="Mot de passe"></label>
-    <label>Comments <textarea class="comments" placeholder="Markdown"></textarea></label>
-    <label>Expire le <input type="date" class="expire" value="${new Date().toISOString().split('T')[0]}"></label>
-  `;
-  card.appendChild(options);
-
-  // Progress
-  const progressBar = document.createElement('div');
-  progressBar.className = 'progress-bar';
-  const progress = document.createElement('div');
-  progress.className = 'progress';
-  progressBar.appendChild(progress);
-  card.appendChild(progressBar);
-
-  // Actions
-  const actions = document.createElement('div');
-  actions.className = 'file-actions';
-
-  const cancelBtn = document.createElement('button');
-  cancelBtn.className = 'cancel';
-  cancelBtn.textContent = 'Annuler';
-  cancelBtn.onclick = () => cancelUpload(fileData);
-  actions.appendChild(cancelBtn);
-
-  const deleteBtn = document.createElement('button');
-  deleteBtn.className = 'delete';
-  deleteBtn.textContent = 'Supprimer';
-  deleteBtn.onclick = () => {
-    fileList.removeChild(card);
-    filesData = filesData.filter(f => f !== fileData);
-  };
-  actions.appendChild(deleteBtn);
-
-  card.appendChild(actions);
-
-  // Lien simulé
-  const linkBox = document.createElement('div');
-  linkBox.className = 'link-box';
-  card.appendChild(linkBox);
-
-  const fileData = { file, card, progress, options, linkBox, xhr: null, cancelled: false };
-  filesData.push(fileData);
-
-  autoUpload(fileData);
-
-  return card;
-}
-
-function autoUpload(fileData) {
-  const { file, progress, linkBox } = fileData;
-  let uploaded = 0;
-  const interval = setInterval(() => {
-    if(fileData.cancelled) {
-      clearInterval(interval);
-      progress.style.width = '0%';
-      notifications.innerHTML = `<div class="error">"${file.name}" upload annulé</div>`;
-      return;
-    }
-    uploaded += Math.random() * 10;
-    if(uploaded >= 100) {
-      uploaded = 100;
-      clearInterval(interval);
-      notifications.innerHTML = `<div class="success">"${file.name}" upload terminé !</div>`;
-      linkBox.textContent = `Lien simulé: https://plik.mock/${file.name}`;
-    }
-    progress.style.width = uploaded + '%';
-  }, 100);
-
-  fileData.cancel = () => { fileData.cancelled = true; clearInterval(interval); };
-}
-
-function cancelUpload(fileData) {
-  if(fileData.cancel) fileData.cancel();
-}
-
-function handleFiles(files) {
-  for(const file of files) {
-    const card = createFileCard(file);
-    fileList.appendChild(card);
-  }
-}
-
-uploadArea.addEventListener('dragover', e => {
-  e.preventDefault();
-  uploadArea.classList.add('dragover');
-});
-uploadArea.addEventListener('dragleave', e => {
-  e.preventDefault();
-  uploadArea.classList.remove('dragover');
-});
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag'); });
+uploadArea.addEventListener('dragleave', e => { e.preventDefault(); uploadArea.classList.remove('drag'); });
 uploadArea.addEventListener('drop', e => {
-  e.preventDefault();
-  uploadArea.classList.remove('dragover');
+  e.preventDefault(); uploadArea.classList.remove('drag');
   handleFiles(e.dataTransfer.files);
 });
-fileInput.addEventListener('change', e => handleFiles(fileInput.files));
-</script>
 
+fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+function humanSize(bytes){
+  if(bytes < 1024) return bytes + ' B';
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  if(bytes < 1024*1024*1024) return (bytes/1024/1024).toFixed(1) + ' MB';
+  return (bytes/1024/1024/1024).toFixed(2) + ' GB';
+}
+
+function handleFiles(list){
+  for(const f of list){
+    addFileCard(f);
+  }
+  if(autoToggle.checked) sendAll();
+}
+
+function addFileCard(file){
+  const id = crypto.randomUUID ? crypto.randomUUID() : Date.now() + Math.random();
+  const card = document.createElement('div');
+  card.className = 'file-card';
+  card.dataset.id = id;
+
+  // Thumb
+  const thumb = document.createElement('div'); thumb.className = 'thumb';
+  const img = document.createElement('img');
+  if(file.type.startsWith('image/')) {
+    const r = new FileReader();
+    r.onload = e => img.src = e.target.result;
+    r.readAsDataURL(file);
+  } else {
+    img.src = 'https://cdn-icons-png.flaticon.com/512/109/109612.png';
+  }
+  thumb.appendChild(img);
+
+  // meta
+  const meta = document.createElement('div'); meta.className = 'meta';
+  const fname = document.createElement('div'); fname.className='filename'; fname.textContent = file.name;
+  const fsize = document.createElement('div'); fsize.className='size'; fsize.textContent = humanSize(file.size);
+  meta.appendChild(fname); meta.appendChild(fsize);
+
+  // options
+  const opts = document.createElement('div'); opts.className = 'opts';
+  opts.innerHTML = `
+    <label class="switch">Destruct after first download <input type="checkbox" class="opt-destruct"></label>
+    <label class="switch">Streaming <input type="checkbox" class="opt-streaming"></label>
+    <label class="switch">Removable <input type="checkbox" class="opt-removable" checked></label>
+    <div style="display:flex;gap:8px">
+      <input type="password" placeholder="Mot de passe (optionnel)" class="opt-password" />
+    </div>
+    <label style="font-size:13px;color:var(--muted)">Comments (Markdown)</label>
+    <textarea class="opt-comments" placeholder="Commentaires (Markdown)"></textarea>
+    <div style="display:flex;gap:8px">
+      <label style="font-size:13px;color:var(--muted);align-self:center">Files will be removed in</label>
+      <input type="date" class="opt-expire" value="${new Date().toISOString().split('T')[0]}">
+    </div>
+  `;
+
+  // progress
+  const progressWrap = document.createElement('div'); progressWrap.className='progress-wrap';
+  const progress = document.createElement('div'); progress.className='progress';
+  progressWrap.appendChild(progress);
+
+  // actions
+  const actions = document.createElement('div'); actions.className='actions';
+  const sendBtn = document.createElement('button'); sendBtn.className='btn primary'; sendBtn.textContent='Envoyer';
+  const cancelBtn = document.createElement('button'); cancelBtn.className='btn ghost'; cancelBtn.textContent='Annuler';
+  const delBtn = document.createElement('button'); delBtn.className='btn danger'; delBtn.textContent='Supprimer';
+  actions.appendChild(sendBtn); actions.appendChild(cancelBtn); actions.appendChild(delBtn);
+
+  // link box
+  const linkBox = document.createElement('div'); linkBox.className='link muted'; linkBox.textContent='—';
+
+  // append
+  card.appendChild(thumb);
+  card.appendChild(meta);
+  card.appendChild(opts);
+  card.appendChild(progressWrap);
+  card.appendChild(actions);
+  card.appendChild(linkBox);
+  fileGrid.appendChild(card);
+
+  // fileData record
+  const fileData = {
+    id, file, el: card, progressEl: progress, sendBtn, cancelBtn, delBtn, linkBox,
+    options: {
+      destruct: card.querySelector('.opt-destruct'),
+      streaming: card.querySelector('.opt-streaming'),
+      removable: card.querySelector('.opt-removable'),
+      password: card.querySelector('.opt-password'),
+      comments: card.querySelector('.opt-comments'),
+      expire: card.querySelector('.opt-expire')
+    },
+    xhr: null,
+    state: 'idle' // idle | uploading | done | canceled | error
+  };
+
+  // bind actions
+  delBtn.addEventListener('click', () => {
+    if(fileData.xhr && fileData.state === 'uploading') fileData.xhr.abort();
+    fileGrid.removeChild(card);
+    filesData = filesData.filter(x => x.id !== id);
+  });
+
+  cancelBtn.addEventListener('click', () => {
+    if(fileData.xhr && fileData.state === 'uploading') {
+      fileData.xhr.abort();
+      fileData.state = 'canceled';
+      fileData.progressEl.style.width = '0%';
+      fileData.linkBox.textContent = 'Upload annulé';
+    }
+  });
+
+  sendBtn.addEventListener('click', () => uploadSingle(fileData));
+
+  filesData.push(fileData);
+  return fileData;
+}
+
+/* convert expiry date to TTL seconds — Plik sometimes expects ttl instead of date.
+   Here we send both expire_date and ttl_seconds to be robust; adjust if your server expects only one. */
+function computeTTL(expireDateStr){
+  try{
+    const now = new Date();
+    const expire = new Date(expireDateStr + 'T23:59:59');
+    const diff = Math.max(0, Math.floor((expire - now)/1000));
+    return diff;
+  }catch(e){ return 0; }
+}
+
+function buildFormDataFor(fileData){
+  const {file, options} = fileData;
+  const form = new FormData();
+  // main file field name — change 'file' to whatever your Plik expects if needed
+  form.append('file', file, file.name);
+
+  // options (change names here if your backend expects other field names)
+  const destruct = options.destruct.checked ? '1' : '0';
+  const streaming = options.streaming.checked ? '1' : '0';
+  const removable = options.removable.checked ? '1' : '0';
+  const password = options.password.value || '';
+  const comments = options.comments.value || '';
+  const expire = options.expire.value || '';
+
+  form.append('destruct', destruct);
+  form.append('streaming', streaming);
+  form.append('removable', removable);
+  if(password) form.append('password', password);
+  if(comments) form.append('comments', comments);
+  if(expire) {
+    form.append('expire_date', expire);          // example: backend may accept expire_date
+    form.append('ttl_seconds', computeTTL(expire)); // alternative: TTL in seconds
+  }
+
+  // For compatibility: also send a JSON metadata blob
+  const meta = { destruct, streaming, removable, password: !!password, expire, comments };
+  form.append('metadata', JSON.stringify(meta));
+
+  return form;
+}
+
+function uploadSingle(fileData){
+  const server = serverUrlInput.value.trim() || SERVER_UPLOAD_URL;
+  if(!server){
+    alert('Configure l\'URL du serveur Plik (champ en bas).');
+    return;
+  }
+
+  if(fileData.state === 'uploading') return;
+  fileData.state = 'uploading';
+  fileData.sendBtn.disabled = true;
+  fileData.cancelBtn.disabled = false;
+  fileData.progressEl.style.width = '0%';
+  fileData.linkBox.textContent = 'Envoi en cours...';
+
+  const fd = buildFormDataFor(fileData);
+
+  const xhr = new XMLHttpRequest();
+  fileData.xhr = xhr;
+
+  xhr.open('POST', server, true);
+
+  // set default headers if needed
+  for(const k in defaultHeaders) xhr.setRequestHeader(k, defaultHeaders[k]);
+
+  xhr.upload.addEventListener('progress', e => {
+    if(e.lengthComputable) {
+      const pct = Math.round( (e.loaded / e.total) * 100 );
+      fileData.progressEl.style.width = pct + '%';
+    }
+  });
+
+  xhr.onreadystatechange = () => {
+    if(xhr.readyState === 4){
+      fileData.sendBtn.disabled = false;
+      fileData.cancelBtn.disabled = true;
+      if(xhr.status >= 200 && xhr.status < 300){
+        fileData.state = 'done';
+        // try parse response as JSON to fetch link
+        try{
+          const json = JSON.parse(xhr.responseText);
+          // si ton plik renvoie { link: "..." } adapte ici
+          const link = json.link || json.url || json.file || xhr.responseText;
+          fileData.linkBox.innerHTML = `<div style="color:var(--success);font-weight:600">OK</div><div class="muted" style="margin-top:6px">${link}</div>`;
+        }catch(e){
+          fileData.linkBox.textContent = 'Upload terminé — voir réponse serveur';
+        }
+      }else{
+        fileData.state = 'error';
+        fileData.linkBox.textContent = 'Erreur serveur : ' + xhr.status + ' — ' + xhr.statusText;
+      }
+    }
+  };
+
+  xhr.onerror = () => {
+    fileData.state = 'error';
+    fileData.progressEl.style.width = '0%';
+    fileData.linkBox.textContent = 'Erreur réseau';
+  };
+
+  xhr.onabort = () => {
+    fileData.state = 'canceled';
+    fileData.linkBox.textContent = 'Upload annulé';
+    fileData.progressEl.style.width = '0%';
+  };
+
+  xhr.send(fd);
+}
+
+/* bulk operations */
+function sendAll(){
+  const server = serverUrlInput.value.trim() || SERVER_UPLOAD_URL;
+  if(!server){
+    alert('Configure l\'URL du serveur Plik (champ en bas).');
+    return;
+  }
+  for(const f of filesData){
+    if(f.state === 'idle' || f.state === 'error') uploadSingle(f);
+  }
+}
+
+function cancelAll(){
+  for(const f of filesData){
+    if(f.xhr && f.state === 'uploading') f.xhr.abort();
+  }
+}
+
+function clearAll(){
+  if(confirm('Supprimer toutes les cartes et annuler les uploads en cours ?')){
+    cancelAll();
+    filesData = [];
+    fileGrid.innerHTML = '';
+  }
+}
+
+/* UI buttons */
+sendAllBtn.addEventListener('click', sendAll);
+cancelAllBtn.addEventListener('click', cancelAll);
+clearAllBtn.addEventListener('click', clearAll);
+
+/* Optional: allow dropping folder by handling directory entries is more advanced
+   and not included here; browsers differ in support. */
+
+/* Helpful: expose filesData in console for debugging */
+window._plikFiles = filesData;
+</script>
 </body>
 </html>
