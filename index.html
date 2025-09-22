@@ -2,15 +2,16 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Upload type Plik Pro</title>
+<title>Plik Style Upload Pro</title>
 <style>
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: #f0f2f5;
   margin: 0;
   padding: 20px;
 }
-h2 { text-align: center; margin-bottom: 20px; }
+h2 { text-align: center; margin-bottom: 20px; color: #333; }
+
 .upload-area {
   border: 2px dashed #bbb;
   border-radius: 12px;
@@ -18,46 +19,57 @@ h2 { text-align: center; margin-bottom: 20px; }
   text-align: center;
   background: #fff;
   cursor: pointer;
-  transition: border-color 0.3s;
+  transition: border-color 0.3s, background 0.3s;
 }
-.upload-area.dragover { border-color: #007bff; }
+.upload-area.dragover { border-color: #007bff; background: #e7f0ff; }
 #fileInput { display: none; }
-.file-list { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 15px; }
+
+.file-list { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
 .file-card {
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  padding: 10px;
-  width: 200px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  padding: 15px;
+  width: 250px;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
 }
 .file-card img {
-  max-width: 100px; max-height: 100px; margin-bottom: 10px; object-fit: contain;
+  max-width: 120px; max-height: 120px; margin-bottom: 10px; object-fit: contain;
+  border-radius: 8px;
 }
 .file-name { font-weight: bold; text-align: center; margin-bottom: 5px; word-break: break-word; }
-.file-date { margin-bottom: 5px; width: 100%; }
-.file-actions { display: flex; gap: 5px; margin-top: 5px; }
+.file-options { display: flex; flex-direction: column; gap: 5px; width: 100%; margin-bottom: 5px; }
+.file-options label { font-size: 12px; display: flex; align-items: center; justify-content: space-between; }
+.file-options input[type="text"], .file-options input[type="date"], .file-options input[type="password"], .file-options textarea {
+  width: 60%; padding: 4px; border-radius: 6px; border: 1px solid #ccc; font-size: 12px;
+}
+textarea { resize: vertical; height: 50px; }
+
+.file-actions { display: flex; gap: 5px; margin-top: 5px; width: 100%; }
 .file-actions button {
-  flex: 1; padding: 5px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;
+  flex: 1; padding: 6px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;
   color: #fff;
 }
 .file-actions button.upload { background: #28a745; }
 .file-actions button.delete { background: #dc3545; }
 .file-actions button.cancel { background: #ffc107; color: #000; }
-.progress-bar { width: 100%; background: #eee; height: 8px; border-radius: 4px; margin-bottom: 5px; overflow: hidden; }
-.progress { height: 100%; width: 0%; background: #007bff; transition: width 0.2s; }
-.notifications { margin-top: 20px; text-align: center; }
+
+.progress-bar { width: 100%; background: #eee; height: 10px; border-radius: 5px; margin-bottom: 5px; overflow: hidden; }
+.progress { height: 100%; width: 0%; background: #007bff; transition: width 0.2s; border-radius: 5px; }
+
+.notifications { margin-top: 20px; text-align: center; font-size: 14px; }
 .notifications .success { color: #28a745; }
 .notifications .error { color: #dc3545; }
-.link-box { margin-top: 5px; font-size: 12px; word-break: break-word; text-align: center; }
+
+.link-box { margin-top: 5px; font-size: 12px; word-break: break-word; text-align: center; background: #f0f0f0; padding: 4px 6px; border-radius: 6px; }
 </style>
 </head>
 <body>
 
-<h2>Upload type Plik Pro</h2>
+<h2>Upload type Plik Pro avec options</h2>
 
 <div class="upload-area" id="uploadArea">
   Glissez-déposez vos fichiers ici ou <button onclick="document.getElementById('fileInput').click()">choisir des fichiers</button>
@@ -79,7 +91,8 @@ function createFileCard(file) {
   const card = document.createElement('div');
   card.className = 'file-card';
 
-  let preview = document.createElement('img');
+  // Preview
+  const preview = document.createElement('img');
   if(file.type.startsWith('image/')) {
     const reader = new FileReader();
     reader.onload = e => preview.src = e.target.result;
@@ -94,12 +107,20 @@ function createFileCard(file) {
   name.textContent = file.name;
   card.appendChild(name);
 
-  const dateInput = document.createElement('input');
-  dateInput.type = 'date';
-  dateInput.className = 'file-date';
-  dateInput.valueAsDate = new Date();
-  card.appendChild(dateInput);
+  // Options
+  const options = document.createElement('div');
+  options.className = 'file-options';
+  options.innerHTML = `
+    <label>Destruct after first download <input type="checkbox" class="destruct"></label>
+    <label>Streaming <input type="checkbox" class="streaming"></label>
+    <label>Removable <input type="checkbox" class="removable"></label>
+    <label>Password <input type="password" class="password" placeholder="Mot de passe"></label>
+    <label>Comments <textarea class="comments" placeholder="Markdown"></textarea></label>
+    <label>Expire le <input type="date" class="expire" value="${new Date().toISOString().split('T')[0]}"></label>
+  `;
+  card.appendChild(options);
 
+  // Progress
   const progressBar = document.createElement('div');
   progressBar.className = 'progress-bar';
   const progress = document.createElement('div');
@@ -107,6 +128,7 @@ function createFileCard(file) {
   progressBar.appendChild(progress);
   card.appendChild(progressBar);
 
+  // Actions
   const actions = document.createElement('div');
   actions.className = 'file-actions';
 
@@ -127,11 +149,12 @@ function createFileCard(file) {
 
   card.appendChild(actions);
 
+  // Lien simulé
   const linkBox = document.createElement('div');
   linkBox.className = 'link-box';
   card.appendChild(linkBox);
 
-  const fileData = { file, card, progress, dateInput, linkBox, xhr: null };
+  const fileData = { file, card, progress, options, linkBox, xhr: null, cancelled: false };
   filesData.push(fileData);
 
   autoUpload(fileData);
@@ -140,12 +163,7 @@ function createFileCard(file) {
 }
 
 function autoUpload(fileData) {
-  const { file, progress, dateInput, linkBox } = fileData;
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('date', dateInput.value);
-
-  // Simulation upload avec annulation
+  const { file, progress, linkBox } = fileData;
   let uploaded = 0;
   const interval = setInterval(() => {
     if(fileData.cancelled) {
@@ -182,18 +200,15 @@ uploadArea.addEventListener('dragover', e => {
   e.preventDefault();
   uploadArea.classList.add('dragover');
 });
-
 uploadArea.addEventListener('dragleave', e => {
   e.preventDefault();
   uploadArea.classList.remove('dragover');
 });
-
 uploadArea.addEventListener('drop', e => {
   e.preventDefault();
   uploadArea.classList.remove('dragover');
   handleFiles(e.dataTransfer.files);
 });
-
 fileInput.addEventListener('change', e => handleFiles(fileInput.files));
 </script>
 
